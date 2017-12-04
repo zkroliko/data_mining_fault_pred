@@ -30,37 +30,38 @@ print(y_test.shape)
 # Training
 
 batch_size = 128
-num_classes = 2
+num_classes = 1
 epochs = 1
 
 # Modyfying labels to time series prediction
 warp_labels(y_train)
+y_train=np.ones(shape=y_train.shape)
 warp_labels(y_test)
 print(x_train.shape[0], 'train samples')
 print(x_test.shape[0], 'test samples')
 
 # We want to concentrate on faulty behaviour
 # class_weights = numpy.asarray([0.0, 1.0])
-class_weights = {0: 0.0, 1: 1000000.0}
+class_weights = {0: 0.0, 1: 1.0}
 
 print("------ Starting ------")
 
-# convert class vectors to binary class matrices
-y_train = keras.utils.to_categorical(y_train, num_classes)
-y_test = keras.utils.to_categorical(y_test, num_classes)
+# # convert class vectors to binary class matrices
+# y_train = keras.utils.to_categorical(y_train, num_classes)
+# y_test = keras.utils.to_categorical(y_test, num_classes)
 
 model = Sequential()
 model.add(Dense(512, activation='relu', input_shape=(41,)))
 model.add(Dropout(0.2))
 model.add(Dense(512, activation='relu'))
 model.add(Dropout(0.2))
-model.add(Dense(2, activation='softmax'))
+model.add(Dense(1, activation='sigmoid'))
 
 model.summary()
 
-model.compile(loss='categorical_crossentropy',
+model.compile(loss='binary_crossentropy',
               optimizer=RMSprop(),
-              # loss_weights=[0.001,1.0],
+              loss_weights=[1.0],
               metrics=['accuracy'])
 
 history = model.fit(x_train, y_train,
@@ -68,7 +69,7 @@ history = model.fit(x_train, y_train,
                     epochs=epochs,
                     verbose=1,
                     # sample_weight=y_train[:, 1],
-                    # class_weight=class_weights,
+                    class_weight=class_weights,
                     validation_data=(x_test, y_test))
 
 score = model.evaluate(x_test, y_test, verbose=1)
