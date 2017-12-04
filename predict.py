@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import numpy as np
-import pandas as pd
 
 import keras
 from keras.models import Sequential
@@ -9,6 +8,7 @@ from keras.layers import Dense, Dropout
 from keras.optimizers import RMSprop
 
 from load import load_data
+from warp_labels import warp_labels
 
 WINDOW_SIZE = 20
 LAST_COLUMN = 43
@@ -33,16 +33,9 @@ batch_size = 128
 num_classes = 2
 epochs = 1
 
-# x_train = x_train.reshape(60000, 784)
-# x_test = x_test.reshape(10000, 784)
-x_train = x_train.astype('float32')
-x_test = x_test.astype('float32')
-# Rolling and setting so we'll we have prediction
-# Last element :)
-y_train = np.roll(y_train, -1)
-y_test = np.roll(y_test, -1)
-# x_train /= 255
-# x_test /= 255
+# Modyfying labels to time series prediction
+warp_labels(y_train)
+warp_labels(y_test)
 print(x_train.shape[0], 'train samples')
 print(x_test.shape[0], 'test samples')
 
@@ -50,12 +43,14 @@ print(x_test.shape[0], 'test samples')
 # class_weights = numpy.asarray([0.0, 1.0])
 class_weights = {0: 0.0, 1: 1000000.0}
 
+print("------ Starting ------")
+
 # convert class vectors to binary class matrices
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
 model = Sequential()
-model.add(Dense(512, activation='relu', input_shape=(37,)))
+model.add(Dense(512, activation='relu', input_shape=(41,)))
 model.add(Dropout(0.2))
 model.add(Dense(512, activation='relu'))
 model.add(Dropout(0.2))
@@ -65,6 +60,7 @@ model.summary()
 
 model.compile(loss='categorical_crossentropy',
               optimizer=RMSprop(),
+              # loss_weights=[0.001,1.0],
               metrics=['accuracy'])
 
 history = model.fit(x_train, y_train,
@@ -72,7 +68,7 @@ history = model.fit(x_train, y_train,
                     epochs=epochs,
                     verbose=1,
                     # sample_weight=y_train[:, 1],
-                    class_weight=class_weights,
+                    # class_weight=class_weights,
                     validation_data=(x_test, y_test))
 
 score = model.evaluate(x_test, y_test, verbose=1)
