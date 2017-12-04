@@ -1,13 +1,9 @@
-import dateutil
 import numpy as np
 import pandas as pd
 
-
+# Not used right now
 def date_parser(date):
     return pd.datetime.strptime(date, ' %Y-%m-%d  %H:%M:%S ')
-
-
-print(date_parser(" 2011-02-01  00:13:00 "))
 
 NORMALIZATION_MIN = np.array([0.00000000e+00, 2.44154000e+04, 5.14322000e+02, 7.06552000e+01,
                               6.72474000e-01, 6.49680000e-01, 7.37878000e-01, 3.00433000e+00,
@@ -36,11 +32,9 @@ LAST_COLUMN = 41
 
 def load_data(filename, n_rows=0, normalized=True):
     if n_rows is 0:
-        raw = pd.read_csv(filename, header=None,
-                          parse_dates=[0], date_parser=date_parser)
+        raw = pd.read_csv(filename, header=None,)
     else:
-        raw = pd.read_csv(filename, header=None,
-                          parse_dates=[0], nrows=n_rows, date_parser=date_parser)
+        raw = pd.read_csv(filename, header=None, nrows=n_rows)
     data = (np.array(raw.values)[:, 1:]).astype(np.float32)
     # print(NORMALIZATION_MIN)
     # print(NORMALIZATION_MAX)
