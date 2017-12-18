@@ -8,7 +8,7 @@ from keras.layers import Dense, Dropout, Conv2D, MaxPooling2D, Activation, Flatt
 from keras.optimizers import RMSprop
 from sklearn import decomposition
 
-from load import load_data
+from data_utils import load_raw_data
 from transform_input import make_timeseries_instances
 from warp_labels import warp_labels
 
@@ -23,7 +23,7 @@ PCA_TARGET_SIZE = 10
 training_filename = 'training_data.csv'
 test_filename = 'test_data.csv'
 
-(x_train, y_train), (x_test, y_test) = load_data(training_filename, TRAIN_ROWS), load_data(test_filename, TEST_ROWS)
+(x_train, y_train), (x_test, y_test) = load_raw_data(training_filename, TRAIN_ROWS), load_raw_data(test_filename, TEST_ROWS)
 print("### Loaded {} training rows".format(x_train.shape[0]))
 print("## X_train shape: ",x_train.shape)
 print("## Y_train shape: ",y_train.shape)

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+
 # Not used right now
 def date_parser(date):
     return pd.datetime.strptime(date, ' %Y-%m-%d  %H:%M:%S ')
@@ -28,14 +29,14 @@ NORMALIZATION_MAX = np.array([2.99643002e+01, 8.12132034e+01, 1.18266998e+02, 2.
                               2.71313000e+01, 2.85471992e+01, 1.03747002e+02, 1.00042999e+02,
                               5.39449997e+01, 6.03083992e+01, 5.11189000e+06, 2.46617004e-01,
                               4.71614990e+03])
-NORMALIZATION_INTERVAL = np.maximum(NORMALIZATION_MAX - NORMALIZATION_MIN,1.0e-06).astype(np.float32)
+NORMALIZATION_INTERVAL = np.maximum(NORMALIZATION_MAX - NORMALIZATION_MIN, 1.0e-06).astype(np.float32)
 
 LAST_COLUMN = 41
 
 
-def load_data(filename, n_rows=0, normalized=True):
+def load_raw_data(filename, n_rows=0, normalized=True):
     if n_rows is 0:
-        raw = pd.read_csv(filename, header=None,)
+        raw = pd.read_csv(filename, header=None, )
     else:
         raw = pd.read_csv(filename, header=None, nrows=n_rows)
     data = (np.array(raw.values)[:, 1:]).astype(np.float32)
@@ -49,3 +50,23 @@ def load_data(filename, n_rows=0, normalized=True):
     else:
         x, y = data[:, :LAST_COLUMN], data[:, LAST_COLUMN]
     return x, y
+
+
+# For loading data processed by PCA
+
+LABEL_COLUMN = 11
+
+
+def load_processed_data(filename, n_rows=0, label_column=LABEL_COLUMN):
+    if n_rows is 0:
+        raw = pd.read_csv(filename, header=None, )
+    else:
+        raw = pd.read_csv(filename, header=None, nrows=n_rows)
+    data = (np.array(raw.values)).astype(np.float32)
+    return data[:, :label_column], data[:, label_column]
+
+
+# Save data processed by PCA
+
+def save_processed_data(filename, x, y):
+    np.savetxt(filename + ".csv", np.column_stack((x, y)), delimiter=",")
