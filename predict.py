@@ -13,7 +13,7 @@ from transform_input import make_timeseries_instances
 from warp_labels import warp_labels
 
 WINDOW_SIZE = 10
-PREDICTION_LENGTH = 50000
+PREDICTION_LENGTH = 1
 
 TRAIN_ROWS = 0
 TEST_ROWS = 0
@@ -57,10 +57,13 @@ print("### Loaded {} test rows".format(x_test.shape[0]))
 print("## X_test shape: ", x_test.shape)
 print("## Y_test shape: ", y_test.shape)
 
+
+
 # Modifying labels to time series prediction
 
-warp_labels(y_train)
-warp_labels(y_test)
+warp_labels(y_train,PREDICTION_LENGTH)
+warp_labels(y_test,PREDICTION_LENGTH)
+
 
 print("### Modified labels a to signal errors in the next {} samples.".format(PREDICTION_LENGTH))
 

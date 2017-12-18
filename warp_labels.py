@@ -6,7 +6,7 @@ import numpy as np
 INTERVAL = 30
 
 
-def warp_labels(labels):
+def warp_labels(labels, interval=INTERVAL):
     for i in range(labels.shape[0]):
-        labels[i] = np.amax(labels[i:min((i + INTERVAL), labels.shape[0])])
+        labels[i] = np.amax(labels[i:min((i + interval), labels.shape[0])])
     return labels
