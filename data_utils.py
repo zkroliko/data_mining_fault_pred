@@ -54,7 +54,7 @@ def load_raw_data(filename, n_rows=0, normalized=True):
 
 # For loading data processed by PCA
 
-LABEL_COLUMN = 11
+LABEL_COLUMN = 10
 
 
 def load_processed_data(filename, n_rows=0, label_column=LABEL_COLUMN):
