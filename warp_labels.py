@@ -4,9 +4,10 @@ import numpy as np
 # this time interval (for now) will be intepreted simply as number of samples
 
 INTERVAL = 30
+SHIFT = 40
 
-
-def warp_labels(labels, interval=INTERVAL):
-    for i in range(labels.shape[0]):
-        labels[i] = np.amax(labels[i:min((i + interval), labels.shape[0])])
+def warp_labels(labels, interval=INTERVAL, shift=SHIFT):
+    labels = np.hstack([labels,np.zeros(shift)])
+    for i in range(labels.shape[0]-shift-interval):
+        labels[i] = np.amax(labels[(i+shift):min((i + interval + shift), labels.shape[0])])
     return labels

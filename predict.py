@@ -3,9 +3,11 @@ from __future__ import print_function
 import datetime
 import os
 
+import math
 import numpy as np
 
 import keras
+import keras.backend as K
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Conv2D, MaxPooling2D, Activation, Flatten
 from keras.optimizers import RMSprop
@@ -15,8 +17,8 @@ from data_utils import load_raw_data, load_processed_data
 from transform_input import make_timeseries_instances
 from warp_labels import warp_labels
 
-WINDOW_SIZE = 20
-PREDICTION_LENGTH = 50
+WINDOW_SIZE = 40
+PREDICTION_LENGTH = 70
 
 TRAIN_ROWS = 0
 TEST_ROWS = 0
@@ -51,6 +53,10 @@ else:
     x_test = pca.transform(x_test)
     print("# Reduced data to {} dimensions", PCA_TARGET_SIZE)
 
+# insertions  = [1000,2000,3000,4000,5000,6000,7000,8000,9000]
+#
+# y_train[insertions]=1
+
 # Data is loaded, let's print some info
 
 print("### Loaded {} training rows".format(x_train.shape[0]))
@@ -59,17 +65,6 @@ print("## Y_train shape: ", y_train.shape)
 print("### Loaded {} test rows".format(x_test.shape[0]))
 print("## X_test shape: ", x_test.shape)
 print("## Y_test shape: ", y_test.shape)
-
-# Experiment
-# x_train = np.zeros(shape=x_train.shape)
-# y_train = np.zeros(shape=y_train.shape)
-# x_train[5000] = np.ones(shape=x_train.shape[1])
-# y_train[5000] = 1
-#
-# x_test = np.zeros(shape=x_test.shape)
-# y_test = np.zeros(shape=y_test.shape)
-# x_test[5000] = np.ones(shape=x_test.shape[1])
-# y_test[5000] = 1
 
 # y_train = np.random.choice([0, 1], size=y_train.shape, p=[0.99, 0.01])
 
@@ -80,7 +75,7 @@ nonzero_train = np.count_nonzero(y_train)
 print("# Number of non-error labels: {}".format(y_train.shape[0] - nonzero_train))
 print("# Number of error labels: {}".format(nonzero_train))
 
-warp_labels(y_train, PREDICTION_LENGTH)
+warp_labels(y_train, PREDICTION_LENGTH, WINDOW_SIZE)
 
 nonzero_train = np.count_nonzero(y_train)
 print("# Number of =signal= non-error labels: {}".format(y_train.shape[0] - nonzero_train))
@@ -91,7 +86,7 @@ nonzero_test = np.count_nonzero(y_test)
 print("# Number of non-error labels: {}".format(y_test.shape[0] - nonzero_test))
 print("# Number of error labels: {}".format(nonzero_test))
 
-warp_labels(y_test, PREDICTION_LENGTH)
+warp_labels(y_test, PREDICTION_LENGTH, WINDOW_SIZE)
 
 nonzero_test = np.count_nonzero(y_test)
 print("# Number of non-error labels: {}".format(y_test.shape[0] - nonzero_test))
@@ -121,7 +116,7 @@ class_weights = {0: 0.0, 1: 1.0}
 # Training
 
 batch_size = 128
-epochs = 1
+epochs = 5
 
 print("------ Starting ------")
 
@@ -141,21 +136,27 @@ model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))
 
 model.add(Flatten())
-model.add(Dense(512))
+model.add(Dense(64))
 model.add(Activation('relu'))
 model.add(Dropout(0.5))
 model.add(Dense(1, activation='sigmoid'))
 
 model.summary()
 
+# Generally used metrics are not suitable, a scaled metric was required(to reflect on relative probability)
+train_proportion = y_train.shape[0] / (nonzero_train + 0.00001)
 def own_metric(y_true, y_pred):
-    return keras.backend.mean(y_pred)
+     length = K.leng(y_pred)
+     zeros_true = K.zeros_like(y_true)
+     zeros_pred = K.zeros_like(y_pred)
+     correction = (length - zeros_true - zeros_pred) / length
+     return K.mean(K.equal(y_true, K.round(y_pred))) * correction
 
 keras.optimizers.RMSprop(lr=0.001)
 model.compile(loss='binary_crossentropy',
               optimizer=RMSprop(),
               loss_weights=[1.0],
-              metrics=[keras.metrics.sparse_categorical_accuracy,own_metric])
+              metrics=["accuracy",keras.metrics.sparse_categorical_accuracy])
 
 history = model.fit(x_train, y_train,
                     batch_size=batch_size,
@@ -187,11 +188,17 @@ model.save_weights(filename+".h5")
 moments = [202313, 520268, 628267, 760933, 761105, 761274, 767884, 767948, 768051, 778196, 781774, 790989, 791094,
            913179, 1073703, 1132513, 1132676, 1140226, 1141794, 1237426, 1241905, 1387080, 1388043, 1570724, 1585962,
            1586097]
-hup = 10
 y = 0
+t = 0
 for m in moments:
-    prediction = model.predict(x_train[m - hup:, :, :], verbose=1)
-    value = np.sum(prediction)
-    print("Seen {}".format(m) if value > 0 else "Didn't see {}".format(m))
-    y += value
-print("Predicted {} of {}".format(y, len(moments)))
+    i = m - PREDICTION_LENGTH
+    if 0 < i < x_train.shape[0]:
+        prediction = model.predict(x_train[i,].reshape(1,WINDOW_SIZE,PCA_TARGET_SIZE,1))
+        value = 0 if math.isnan(np.sum(prediction)) else np.sum(prediction)
+        if value > 0:
+            print("Seen {} from {} away".format(m,PREDICTION_LENGTH))
+        else:
+            print("Didn't see {} from {} away".format(m, PREDICTION_LENGTH))
+        y += value
+        t += 1
+print("Predicted {} of {}".format(y, t))
