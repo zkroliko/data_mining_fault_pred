@@ -33,7 +33,7 @@ def main(argv):
         print("Correct arguments: <model> <weights> <data_file> |-<custom>|")
         exit()
     if not (os.path.exists(argv[1]) and os.path.exists(argv[2]) and os.path.exists(argv[3])):
-        print("One of the specified files {}, {}, {} doesn't exist".format(argv[1], argv[2]),argv[3])
+        print("One of the specified files {}, {}, {} doesn't exist".format(argv[1], argv[2],argv[3]))
         exit()
 
     print("# Loading data from files {}".format(argv[3]))
@@ -94,7 +94,6 @@ def main(argv):
     else:
         while(True):
             line = sys.stdin.readline()
-            print(line)
             i = int(line) - PREDICTION_LENGTH
             if 0 < i < X.shape[0]:
                 prediction = model.predict(X[i,].reshape(1,WINDOW_SIZE,PCA_TARGET_SIZE,1))
