@@ -18,7 +18,7 @@ from transform_input import make_timeseries_instances
 from warp_labels import warp_labels
 
 WINDOW_SIZE = 40
-PREDICTION_LENGTH = 70
+PREDICTION_LENGTH = 1000
 
 TRAIN_ROWS = 0
 TEST_ROWS = 0
@@ -53,6 +53,7 @@ else:
     x_test = pca.transform(x_test)
     print("# Reduced data to {} dimensions", PCA_TARGET_SIZE)
 
+# Experiments
 # insertions  = [1000,2000,3000,4000,5000,6000,7000,8000,9000]
 #
 # y_train[insertions]=1
@@ -75,7 +76,7 @@ nonzero_train = np.count_nonzero(y_train)
 print("# Number of non-error labels: {}".format(y_train.shape[0] - nonzero_train))
 print("# Number of error labels: {}".format(nonzero_train))
 
-warp_labels(y_train, PREDICTION_LENGTH, WINDOW_SIZE)
+y_train=warp_labels(y_train, PREDICTION_LENGTH, WINDOW_SIZE)
 
 nonzero_train = np.count_nonzero(y_train)
 print("# Number of =signal= non-error labels: {}".format(y_train.shape[0] - nonzero_train))
@@ -86,7 +87,7 @@ nonzero_test = np.count_nonzero(y_test)
 print("# Number of non-error labels: {}".format(y_test.shape[0] - nonzero_test))
 print("# Number of error labels: {}".format(nonzero_test))
 
-warp_labels(y_test, PREDICTION_LENGTH, WINDOW_SIZE)
+y_test=warp_labels(y_test, PREDICTION_LENGTH, WINDOW_SIZE)
 
 nonzero_test = np.count_nonzero(y_test)
 print("# Number of non-error labels: {}".format(y_test.shape[0] - nonzero_test))
@@ -116,7 +117,7 @@ class_weights = {0: 0.0, 1: 1.0}
 # Training
 
 batch_size = 128
-epochs = 5
+epochs = 1
 
 print("------ Starting ------")
 
@@ -156,7 +157,7 @@ keras.optimizers.RMSprop(lr=0.001)
 model.compile(loss='binary_crossentropy',
               optimizer=RMSprop(),
               loss_weights=[1.0],
-              metrics=["accuracy",keras.metrics.sparse_categorical_accuracy])
+              metrics=["accuracy"])
 
 history = model.fit(x_train, y_train,
                     batch_size=batch_size,

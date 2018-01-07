@@ -9,5 +9,6 @@ SHIFT = 40
 def warp_labels(labels, interval=INTERVAL, shift=SHIFT):
     labels = np.hstack([labels,np.zeros(shift)])
     for i in range(labels.shape[0]-shift-interval):
-        labels[i] = np.amax(labels[(i+shift):min((i + interval + shift), labels.shape[0])])
+        if labels[i] > 0:
+            labels[max(0,i-interval):i]=labels[i]
     return labels
