@@ -3,7 +3,6 @@ from __future__ import print_function
 import datetime
 import os
 
-import math
 import numpy as np
 
 import keras
@@ -32,6 +31,8 @@ test_filename = 'test_data.csv'
 
 prep_training_filename = 'training_data_ps.csv'
 prep_test_filename = 'test_data_ps.csv'
+
+import sys
 
 # Usually we will use pre-processed data, this is for a special case
 if PREPROCESSED:
@@ -112,7 +113,7 @@ y_train = y_train[:x_train.shape[0]]
 y_test = y_test[:x_test.shape[0]]
 
 # We want to concentrate on faulty behaviour
-class_weights = {0: 0.0, 1: 1.0}
+class_weights = {0: y_train.shape[0]-nonzero_train, 1: nonzero_train}
 
 # Training
 
@@ -186,20 +187,24 @@ model.save_weights(filename+".h5")
 # reading: https://machinelearningmastery.com/save-load-keras-deep-learning-models/
 
 # Custom testing, won't believe these metrics
-moments = [202313, 520268, 628267, 760933, 761105, 761274, 767884, 767948, 768051, 778196, 781774, 790989, 791094,
-           913179, 1073703, 1132513, 1132676, 1140226, 1141794, 1237426, 1241905, 1387080, 1388043, 1570724, 1585962,
-           1586097]
-y = 0
-t = 0
-for m in moments:
-    i = m - PREDICTION_LENGTH
-    if 0 < i < x_train.shape[0]:
-        prediction = model.predict(x_train[i,].reshape(1,WINDOW_SIZE,PCA_TARGET_SIZE,1))
-        value = 0 if math.isnan(np.sum(prediction)) else np.sum(prediction)
-        if value > 0:
-            print("Seen {} from {} away".format(m,PREDICTION_LENGTH))
-        else:
-            print("Didn't see {} from {} away".format(m, PREDICTION_LENGTH))
-        y += value
-        t += 1
-print("Predicted {} of {}".format(y, t))
+# moments = [202313, 520268, 628267, 760933, 761105, 761274, 767884, 767948, 768051, 778196, 781774, 790989, 791094,
+#            913179, 1073703, 1132513, 1132676, 1140226, 1141794, 1237426, 1241905, 1387080, 1388043, 1570724, 1585962,
+#            1586097]
+# y = 0
+# t = 0
+# for m in moments:
+#     i = m - PREDICTION_LENGTH
+#     if 0 < i < x_train.shape[0]:
+#         prediction = model.predict(x_train[i,].reshape(1,WINDOW_SIZE,PCA_TARGET_SIZE,1))
+#         value = 0 if math.isnan(np.sum(prediction)) else np.sum(prediction)
+#         if value > 0:
+#             print("Seen {} from {} away".format(m,PREDICTION_LENGTH))
+#         else:
+#             print("Didn't see {} from {} away".format(m, PREDICTION_LENGTH))
+#         y += value
+#         t += 1
+# print("Predicted {} of {}".format(y, t))
+
+
+if __name__ == "__main__":
+    main(sys.argv)
