@@ -1,6 +1,9 @@
 from __future__ import print_function
+
+import fileinput
 import os
 
+import math
 import numpy as np
 
 import keras
@@ -27,24 +30,24 @@ PCA_TARGET_SIZE = 10
 # For predicting a single instance from a file
 def main(argv):
     if len(argv) < 4:
-        print("Correct arguments: <model> <weights> <data_file> |datapoint|")
+        print("Correct arguments: <model> <weights> <data_file> |-<custom>|")
         exit()
     if not (os.path.exists(argv[1]) and os.path.exists(argv[2]) and os.path.exists(argv[3])):
         print("One of the specified files {}, {}, {} doesn't exist".format(argv[1], argv[2]),argv[3])
         exit()
 
     print("# Loading data from files {}".format(argv[3]))
-    (x_test, y_test) = load_processed_data(argv[3], TEST_ROWS)
+    (X, y_test) = load_processed_data(argv[3], TEST_ROWS)
 
-    print("### Loaded {} test rows".format(x_test.shape[0]))
-    print("## X_test shape: ", x_test.shape)
+    print("### Loaded {} test rows".format(X.shape[0]))
+    print("## X_test shape: ", X.shape)
     print("## Y_test shape: ", y_test.shape)
 
     # y_train = np.random.choice([0, 1], size=y_train.shape, p=[0.99, 0.01])
 
     # Modifying labels to time series prediction
 
-    print("### Modyfyinh labels")
+    print("### Modifying labels")
     nonzero_test = np.count_nonzero(y_test)
     print("# Number of non-error labels: {}".format(y_test.shape[0] - nonzero_test))
     print("# Number of error labels: {}".format(nonzero_test))
@@ -59,15 +62,15 @@ def main(argv):
 
     # Modifying x's to be 3D vectors
 
-    x_test = make_timeseries_instances(x_test, WINDOW_SIZE)
+    X = make_timeseries_instances(X, WINDOW_SIZE)
 
     print("### Modified data to tensors with height {}".format(WINDOW_SIZE))
 
     # Something with adding the channel count
 
-    x_test = np.expand_dims(x_test, axis=3)
+    X = np.expand_dims(X, axis=3)
 
-    y_test = y_test[:x_test.shape[0]]
+    y_test = y_test[:X.shape[0]]
 
 
     print("### Loading the model from file {}".format(argv[1]))
@@ -81,12 +84,25 @@ def main(argv):
 
     model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
 
-    print("### Evaluationg the model")
+    print("### Evaluating the model")
 
-    score = model.evaluate(x_test, y_test, verbose=1)
-    print("#### Results ####")
-    print('Test loss:', score[0])
-    print('Test accuracy:', score[1])
+    if len(argv) < 5:
+        score = model.evaluate(X, y_test, verbose=1)
+        print("#### Results ####")
+        print('Test loss:', score[0])
+        print('Test accuracy:', score[1])
+    else:
+        while(True):
+            line = sys.stdin.readline()
+            print(line)
+            i = int(line) - PREDICTION_LENGTH
+            if 0 < i < X.shape[0]:
+                prediction = model.predict(X[i,].reshape(1,WINDOW_SIZE,PCA_TARGET_SIZE,1))
+                value = 0 if math.isnan(np.sum(prediction)) else np.sum(prediction)
+                if value > 0:
+                    print("Will fail in {}".format(PREDICTION_LENGTH))
+                else:
+                    print("Will not fail in {}".format(PREDICTION_LENGTH))
 
 if __name__ == "__main__":
     main(sys.argv)
