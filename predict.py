@@ -55,11 +55,6 @@ else:
     x_test = pca.transform(x_test)
     print("# Reduced data to {} dimensions", PCA_TARGET_SIZE)
 
-# Experiments
-# insertions  = [1000,2000,3000,4000,5000,6000,7000,8000,9000]
-#
-# y_train[insertions]=1
-
 # Data is loaded, let's print some info
 
 print("### Loaded {} training rows".format(x_train.shape[0]))
@@ -114,12 +109,14 @@ y_train = y_train[:x_train.shape[0]]
 y_test = y_test[:x_test.shape[0]]
 
 # We want to concentrate on faulty behaviour
-class_weights = {0: y_train.shape[0]-nonzero_train, 1: nonzero_train}
+w_zero, w_one = nonzero_train / y_train.shape[0], (y_train.shape[0] - nonzero_train) / y_train.shape[0]
+print("### Weights of classes 0 and 1 are respectively: {}, {}".format(w_zero, w_one))
+class_weights = {0: w_one, 1: w_zero}
 
 # Training
 
 batch_size = 128
-epochs = 5
+epochs = 2
 
 print("------ Starting ------")
 
@@ -130,34 +127,22 @@ model.add(Activation('relu'))
 model.add(Conv2D(32, (3, 3)))
 model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
 
-model.add(Conv2D(64, (3, 3), padding='same'))
+model.add(Conv2D(32, (3, 3), padding='same'))
 model.add(BatchNormalization())
 model.add(Activation('relu'))
-model.add(Conv2D(64, (3, 3)))
+model.add(Conv2D(32, (3, 3)))
 model.add(BatchNormalization())
 model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
 
 model.add(Flatten())
 model.add(Dense(64))
 model.add(BatchNormalization())
 model.add(Activation('relu'))
-model.add(Dropout(0.5))
 model.add(Dense(1, activation='sigmoid'))
 
 model.summary()
-
-# Generally used metrics are not suitable, a scaled metric was required(to reflect on relative probability)
-# train_proportion = y_train.shape[0] / (nonzero_train + 0.00001)
-# def own_metric(y_true, y_pred):
-#      length = K.leng(y_pred)
-#      zeros_true = K.zeros_like(y_true)
-#      zeros_pred = K.zeros_like(y_pred)
-#      correction = (length - zeros_true - zeros_pred) / length
-#      return K.mean(K.equal(y_true, K.round(y_pred))) * correction
 
 keras.optimizers.RMSprop(lr=0.001)
 model.compile(loss='binary_crossentropy',
@@ -172,13 +157,6 @@ history = model.fit(x_train, y_train,
                     class_weight=class_weights,
                     validation_data=(x_test, y_test))
 
-# score = model.evaluate(x_test, y_test, verbose=1)
-# # We have to scale the results, they are not represented well with respect to classes
-# print("#### Results ####")
-# proportion = y_test.shape[0] / (nonzero_test + 0.00001)
-# print('Test loss:', score[0])
-# print('Test accuracy:', score[1])
-
 # Saving the model
 if not os.path.exists("models"):
     os.makedirs("models")
@@ -187,8 +165,6 @@ model_json = model.to_json()
 with open(filename, "w") as file:
     file.write(model_json)
 model.save_weights(filename+".h5")
-
-# reading: https://machinelearningmastery.com/save-load-keras-deep-learning-models/
 
 # Custom testing, won't believe these metrics
 # moments = [202313, 520268, 628267, 760933, 761105, 761274, 767884, 767948, 768051, 778196, 781774, 790989, 791094,
