@@ -33,7 +33,7 @@ def main(argv):
         print("Correct arguments: <model> <weights> <data_file> |-<custom>|")
         exit()
     if not (os.path.exists(argv[1]) and os.path.exists(argv[2]) and os.path.exists(argv[3])):
-        print("One of the specified files {}, {}, {} doesn't exist".format(argv[1], argv[2],argv[3]))
+        print("One of the specified files {}, {}, {} doesn't exist".format(argv[1], argv[2], argv[3]))
         exit()
 
     print("# Loading data from files {}".format(argv[3]))
@@ -55,6 +55,7 @@ def main(argv):
     y_test = warp_labels(y_test, PREDICTION_LENGTH, WINDOW_SIZE)
 
     nonzero_test = np.count_nonzero(y_test)
+    print("## Labels modified")
     print("# Number of non-error labels: {}".format(y_test.shape[0] - nonzero_test))
     print("# Number of error labels: {}".format(nonzero_test))
 
@@ -71,7 +72,6 @@ def main(argv):
     X = np.expand_dims(X, axis=3)
 
     y_test = y_test[:X.shape[0]]
-
 
     print("### Loading the model from file {}".format(argv[1]))
     json_file = open(argv[1], 'r')
@@ -92,16 +92,17 @@ def main(argv):
         print('Test loss:', score[0])
         print('Test accuracy:', score[1])
     else:
-        while(True):
+        while True:
             line = sys.stdin.readline()
             i = int(line) - PREDICTION_LENGTH
             if 0 < i < X.shape[0]:
-                prediction = model.predict(X[i,].reshape(1,WINDOW_SIZE,PCA_TARGET_SIZE,1))
+                prediction = model.predict(X[i,].reshape(1, WINDOW_SIZE, PCA_TARGET_SIZE, 1))
                 value = 0 if math.isnan(np.sum(prediction)) else np.sum(prediction)
                 if value > 0:
                     print("Will fail in {}".format(PREDICTION_LENGTH))
                 else:
                     print("Will not fail in {}".format(PREDICTION_LENGTH))
+
 
 if __name__ == "__main__":
     main(sys.argv)
