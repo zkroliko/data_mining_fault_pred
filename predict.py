@@ -10,6 +10,7 @@ import keras.backend as K
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Conv2D, MaxPooling2D, Activation, Flatten
 from keras.optimizers import RMSprop
+from keras.layers.normalization import BatchNormalization
 from sklearn import decomposition
 
 from data_utils import load_raw_data, load_processed_data
@@ -118,12 +119,13 @@ class_weights = {0: y_train.shape[0]-nonzero_train, 1: nonzero_train}
 # Training
 
 batch_size = 128
-epochs = 1
+epochs = 5
 
 print("------ Starting ------")
 
 model = Sequential()
 model.add(Conv2D(32, (3, 3), padding='same', input_shape=[WINDOW_SIZE, PCA_TARGET_SIZE, 1]))
+model.add(BatchNormalization())
 model.add(Activation('relu'))
 model.add(Conv2D(32, (3, 3)))
 model.add(Activation('relu'))
@@ -131,14 +133,17 @@ model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))
 
 model.add(Conv2D(64, (3, 3), padding='same'))
+model.add(BatchNormalization())
 model.add(Activation('relu'))
 model.add(Conv2D(64, (3, 3)))
+model.add(BatchNormalization())
 model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))
 
 model.add(Flatten())
 model.add(Dense(64))
+model.add(BatchNormalization())
 model.add(Activation('relu'))
 model.add(Dropout(0.5))
 model.add(Dense(1, activation='sigmoid'))
@@ -146,13 +151,13 @@ model.add(Dense(1, activation='sigmoid'))
 model.summary()
 
 # Generally used metrics are not suitable, a scaled metric was required(to reflect on relative probability)
-train_proportion = y_train.shape[0] / (nonzero_train + 0.00001)
-def own_metric(y_true, y_pred):
-     length = K.leng(y_pred)
-     zeros_true = K.zeros_like(y_true)
-     zeros_pred = K.zeros_like(y_pred)
-     correction = (length - zeros_true - zeros_pred) / length
-     return K.mean(K.equal(y_true, K.round(y_pred))) * correction
+# train_proportion = y_train.shape[0] / (nonzero_train + 0.00001)
+# def own_metric(y_true, y_pred):
+#      length = K.leng(y_pred)
+#      zeros_true = K.zeros_like(y_true)
+#      zeros_pred = K.zeros_like(y_pred)
+#      correction = (length - zeros_true - zeros_pred) / length
+#      return K.mean(K.equal(y_true, K.round(y_pred))) * correction
 
 keras.optimizers.RMSprop(lr=0.001)
 model.compile(loss='binary_crossentropy',
@@ -167,13 +172,12 @@ history = model.fit(x_train, y_train,
                     class_weight=class_weights,
                     validation_data=(x_test, y_test))
 
-score = model.evaluate(x_test, y_test, verbose=1)
-# score = model.evaluate(x_test, y_test,sample_weight=y_test[:,0], verbose=1)
-# We have to scale the results, they are not represented well with respect to classes
-print("#### Results ####")
-proportion = y_test.shape[0] / (nonzero_test + 0.00001)
-print('Test loss:', score[0])
-print('Test accuracy:', score[1])
+# score = model.evaluate(x_test, y_test, verbose=1)
+# # We have to scale the results, they are not represented well with respect to classes
+# print("#### Results ####")
+# proportion = y_test.shape[0] / (nonzero_test + 0.00001)
+# print('Test loss:', score[0])
+# print('Test accuracy:', score[1])
 
 # Saving the model
 if not os.path.exists("models"):
@@ -204,7 +208,3 @@ model.save_weights(filename+".h5")
 #         y += value
 #         t += 1
 # print("Predicted {} of {}".format(y, t))
-
-
-if __name__ == "__main__":
-    main(sys.argv)
