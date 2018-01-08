@@ -29,15 +29,18 @@ PCA_TARGET_SIZE = 10
 
 # For predicting a single instance from a file
 def main(argv):
-    if len(argv) < 4:
-        print("Correct arguments: <model> <weights> <data_file> |-<custom>|")
+    if len(argv) < 3:
+        print("Correct arguments: <model> <data_file> |-<custom>|")
         exit()
-    if not (os.path.exists(argv[1]) and os.path.exists(argv[2]) and os.path.exists(argv[3])):
-        print("One of the specified files {}, {}, {} doesn't exist".format(argv[1], argv[2], argv[3]))
+    model_file = argv[1]
+    weights_file = argv[1]+".h5"
+    data_file = argv[2]
+    if not (os.path.exists(model_file) and os.path.exists(weights_file) and os.path.exists(data_file)):
+        print("One of the specified files {}, {}, {} doesn't exist".format(model_file, weights_file, data_file))
         exit()
 
-    print("# Loading data from files {}".format(argv[3]))
-    (X, y_test) = load_processed_data(argv[3], TEST_ROWS)
+    print("# Loading data from files {}".format(data_file))
+    (X, y_test) = load_processed_data(data_file, TEST_ROWS)
 
     print("### Loaded {} test rows".format(X.shape[0]))
     print("## X_test shape: ", X.shape)
@@ -73,35 +76,44 @@ def main(argv):
 
     y_test = y_test[:X.shape[0]]
 
-    print("### Loading the model from file {}".format(argv[1]))
-    json_file = open(argv[1], 'r')
+    print("### Loading the model from file {}".format(model_file))
+    json_file = open(model_file, 'r')
     model_json = json_file.read()
     json_file.close()
     model = model_from_json(model_json)
-    print("### Loading weights from file {}".format(argv[2]))
-    model.load_weights(argv[2])
+    print("### Loading weights from file {}".format(weights_file))
+    model.load_weights(weights_file)
     print("### Loaded model from disk")
 
     model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
 
     print("### Evaluating the model")
 
-    if len(argv) < 5:
+    if len(argv) < 4:
         score = model.evaluate(X, y_test, verbose=1)
         print("#### Results ####")
         print('Test loss:', score[0])
         print('Test accuracy:', score[1])
     else:
-        while True:
-            line = sys.stdin.readline()
+        # while True:
+        #     line = sys.stdin.readline()
+        #     i = int(line) - PREDICTION_LENGTH
+        #     if 0 < i < X.shape[0]:
+        #         prediction = model.predict(X[i,].reshape(1, WINDOW_SIZE, PCA_TARGET_SIZE, 1))
+        #         value = 0 if math.isnan(np.sum(prediction)) else np.sum(prediction)
+        #         if value > 0.0001:
+        #             print("Will fail in {}".format(PREDICTION_LENGTH))
+        #         else:
+        #             print("Will not fail in {}".format(PREDICTION_LENGTH))
+        for line in np.arange(0,1586097,2000):
             i = int(line) - PREDICTION_LENGTH
             if 0 < i < X.shape[0]:
                 prediction = model.predict(X[i,].reshape(1, WINDOW_SIZE, PCA_TARGET_SIZE, 1))
                 value = 0 if math.isnan(np.sum(prediction)) else np.sum(prediction)
-                if value > 0:
-                    print("Will fail in {}".format(PREDICTION_LENGTH))
+                if value > 0.0001: # Not giving exactly 0
+                    print(i,",",1)
                 else:
-                    print("Will not fail in {}".format(PREDICTION_LENGTH))
+                    print(i,",",0)
 
 
 if __name__ == "__main__":
