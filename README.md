@@ -1,5 +1,9 @@
 # Fault prediction based on timeseries of device's sensor logs
 
+Using Keras/Tensorflow implementation of CNN's for logistic classification with very (1:1000) unbalanced classes - rebalancing was done with class weights.
+
+# Source files #
+
 visualize.py - is used for displaying a choosen region of data as a color image; conifugrable in-file
 
 data_utils.py - for loading and normalization (if needed) of data
