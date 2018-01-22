@@ -20,7 +20,7 @@ from warp_labels import warp_labels
 import sys
 
 WINDOW_SIZE = 40
-PREDICTION_LENGTH = 1000
+PREDICTION_LENGTH = 10
 
 TEST_ROWS = 0
 
@@ -30,7 +30,7 @@ PCA_TARGET_SIZE = 10
 # For predicting a single instance from a file
 def main(argv):
     if len(argv) < 3:
-        print("Correct arguments: <model> <data_file> |-<custom>|")
+        print("Correct arguments: <model> <data_file> |-<i(interactive)>|")
         exit()
     model_file = argv[1]
     weights_file = argv[1]+".h5"
@@ -94,26 +94,27 @@ def main(argv):
         print("#### Results ####")
         print('Test loss:', score[0])
         print('Test accuracy:', score[1])
-    else:
-        # while True:
-        #     line = sys.stdin.readline()
-        #     i = int(line) - PREDICTION_LENGTH
-        #     if 0 < i < X.shape[0]:
-        #         prediction = model.predict(X[i,].reshape(1, WINDOW_SIZE, PCA_TARGET_SIZE, 1))
-        #         value = 0 if math.isnan(np.sum(prediction)) else np.sum(prediction)
-        #         if value > 0.0001:
-        #             print("Will fail in {}".format(PREDICTION_LENGTH))
-        #         else:
-        #             print("Will not fail in {}".format(PREDICTION_LENGTH))
-        for line in np.arange(0,1586097,2000):
+    elif "-i" in argv:
+        print("Enter sample numbers for prediction:")
+        while True:
+            line = sys.stdin.readline()
             i = int(line) - PREDICTION_LENGTH
             if 0 < i < X.shape[0]:
                 prediction = model.predict(X[i,].reshape(1, WINDOW_SIZE, PCA_TARGET_SIZE, 1))
                 value = 0 if math.isnan(np.sum(prediction)) else np.sum(prediction)
-                if value > 0.0001: # Not giving exactly 0
-                    print(i,",",1)
+                if value > 0.0001:
+                    print("Will fail in {}".format(PREDICTION_LENGTH))
                 else:
-                    print(i,",",0)
+                    print("Will not fail in {}".format(PREDICTION_LENGTH))
+        # for line in np.arange(0,1586097,10):
+        #     i = int(line) - PREDICTION_LENGTH
+        #     if 0 < i < X.shape[0]:
+        #         prediction = model.predict(X[i,].reshape(1, WINDOW_SIZE, PCA_TARGET_SIZE, 1))
+        #         value = 0 if math.isnan(np.sum(prediction)) else np.sum(prediction)
+        #         if value > 0.0001: # Not giving exactly 0
+        #             print(i,",",1)
+        #         else:
+        #             print(i,",",0)
 
 
 if __name__ == "__main__":
