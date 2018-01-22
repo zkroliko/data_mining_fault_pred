@@ -9,13 +9,13 @@ Timeseries of sensor samples labeled as `1` when faulty behaviour occured. Data 
 Originally:
 
 ```
-Timestamp - 41 numeric values - 0/1 label
+Timestamp , 41 numeric values , 0/1 label
 ```
 
 After removing the timestamp and PCA:
 
 ```
-10 numeric values - 0/1 label
+10 numeric values , 0/1 label
 ```
 
 ## Source files ##
