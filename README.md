@@ -38,4 +38,4 @@ After removing the timestamp and PCA:
 
 ## Results ##
 
-Achievied `99.983%` accurency on test data, and over `85%` of faults (`l` labels) detected within margin of 10-50 time units.
+Achievied `99.983%` accuracy on test data, and over `85%` sensitivity (`l` - fault as positive example) detected within margin of 50 time units.
